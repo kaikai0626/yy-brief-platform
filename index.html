@@ -144,6 +144,25 @@ input[type="file"]{padding:8px;background:var(--gray-50);border:1.5px dashed var
 @media(max-width:600px){.role-cards{grid-template-columns:1fr;}.main{padding:16px;}.stats-grid{grid-template-columns:repeat(2,1fr);}
 .auth-card{padding:24px;}.topbar{padding:0 16px;}.modal-body{padding:16px;}.modal-footer{padding:12px 16px;}}
 </style>
+<script type="module">
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+  import { getDatabase, ref, set, get, onValue } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
+  const firebaseConfig = {
+    databaseURL: "https://yy-brief-platform-default-rtdb.asia-southeast1.firebaseio.com"
+  };
+  const app = initializeApp(firebaseConfig);
+  const db_ref = getDatabase(app);
+  const DATA_PATH = 'collab_platform_v3';
+
+  window._fbSet = function(data) {
+    return set(ref(db_ref, DATA_PATH), data);
+  };
+  window._fbGet = function() {
+    return get(ref(db_ref, DATA_PATH)).then(snap => snap.exists() ? snap.val() : null);
+  };
+  window._fbReady = true;
+  window.dispatchEvent(new Event('fb_ready'));
+</script>
 </head>
 <body>
 <div class="toast-container" id="toastContainer"></div>
@@ -433,10 +452,12 @@ input[type="file"]{padding:8px;background:var(--gray-50);border:1.5px dashed var
 
 <script>
 const DB_KEY='collab_platform_v3';
-function loadDB(){const def={tasks:[],briefs:[],contents:[],users:[],userTasks:[]};try{const d=JSON.parse(localStorage.getItem(DB_KEY));if(!d)return def;// 补全缺失字段，防止旧数据没有某些 key
-return Object.assign({},def,d);}catch(e){return def;}}
-function saveDB(db){localStorage.setItem(DB_KEY,JSON.stringify(db));}
+const DB_DEF={tasks:[],briefs:[],contents:[],users:[],userTasks:[]};
+function loadDB(){try{const d=JSON.parse(localStorage.getItem(DB_KEY));return d?Object.assign({},DB_DEF,d):Object.assign({},DB_DEF);}catch(e){return Object.assign({},DB_DEF);}}
+function saveDB(db){localStorage.setItem(DB_KEY,JSON.stringify(db));if(window._fbSet)window._fbSet(db).catch(e=>console.warn('Firebase写入失败',e));}
 function getDB(){return loadDB();}
+function syncFromFirebase(){if(!window._fbGet)return;window._fbGet().then(d=>{if(!d)return;const merged=Object.assign({},DB_DEF,d);localStorage.setItem(DB_KEY,JSON.stringify(merged));}).catch(e=>console.warn('Firebase读取失败',e));}
+window.addEventListener('fb_ready',function(){syncFromFirebase();setInterval(syncFromFirebase,10000);});
 
 let currentRole=null,currentCreatorUser=null,pendingJoinTaskId=null,pendingApproveBriefId=null,pendingRejectBriefId=null,pendingRejectRole=null,_pendingBriefData=null,currentCreatorTaskId=null;
 
