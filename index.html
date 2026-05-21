@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>约稿管理平台</title>
+<style>
+:root{--primary:#e63e6d;--primary-light:#fff0f4;--primary-dark:#c22d58;--gray-50:#f9fafb;--gray-100:#f3f4f6;--gray-200:#e5e7eb;--gray-300:#d1d5db;--gray-400:#9ca3af;--gray-500:#6b7280;--gray-600:#4b5563;--gray-700:#374151;--gray-800:#1f2937;--gray-900:#111827;--green:#10b981;--yellow:#f59e0b;--red:#ef4444;--blue:#3b82f6;--shadow-sm:0 1px 2px rgba(0,0,0,.06);--shadow-md:0 4px 6px rgba(0,0,0,.07);--shadow-lg:0 10px 15px rgba(0,0,0,.1);--radius:12px;--radius-sm:8px;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif;background:var(--gray-50);color:var(--gray-800);min-height:100vh;}
+.topbar{background:#fff;border-bottom:1px solid var(--gray-200);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:var(--shadow-sm);}
+.topbar-logo{font-size:17px;font-weight:700;color:var(--primary);display:flex;align-items:center;gap:8px;}
+.logo-icon{width:28px;height:28px;background:var(--primary);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;}
+.topbar-right{display:flex;align-items:center;gap:12px;}
+.role-badge{padding:4px 12px;border-radius:20px;font-size:13px;font-weight:500;}
+.role-badge.operator{background:#ede9fe;color:#7c3aed;}.role-badge.vendor{background:#dbeafe;color:#1d4ed8;}.role-badge.creator{background:var(--primary-light);color:var(--primary);}
+.main{flex:1;padding:24px;max-width:1100px;margin:0 auto;width:100%;}
+.screen{display:none;}.screen.active{display:block;}
+.home-hero{text-align:center;padding:60px 20px 40px;}
+.home-hero h1{font-size:32px;font-weight:700;color:var(--gray-900);margin-bottom:12px;}
+.home-hero p{font-size:16px;color:var(--gray-500);margin-bottom:40px;}
+.role-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;max-width:720px;margin:0 auto;}
+.role-card{background:#fff;border:2px solid var(--gray-200);border-radius:var(--radius);padding:28px 20px;cursor:pointer;transition:all .2s;text-align:center;}
+.role-card:hover{border-color:var(--primary);box-shadow:var(--shadow-md);transform:translateY(-2px);}
+.role-card .icon{font-size:36px;margin-bottom:12px;}
+.role-card h3{font-size:16px;font-weight:600;color:var(--gray-800);margin-bottom:6px;}
+.role-card p{font-size:13px;color:var(--gray-500);}
+.auth-card{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow-lg);padding:40px;max-width:480px;margin:40px auto;}
+.auth-card h2{font-size:20px;font-weight:700;margin-bottom:6px;}
+.subtitle{font-size:14px;color:var(--gray-500);margin-bottom:28px;}
+.form-group{margin-bottom:18px;}
+.form-group label{display:block;font-size:14px;font-weight:500;color:var(--gray-700);margin-bottom:6px;}
+.required{color:var(--primary);margin-left:2px;}
+.form-group input,.form-group textarea,.form-group select{width:100%;padding:10px 14px;border:1.5px solid var(--gray-200);border-radius:var(--radius-sm);font-size:14px;color:var(--gray-800);background:#fff;transition:border-color .2s;font-family:inherit;}
+.form-group input:focus,.form-group textarea:focus,.form-group select:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(230,62,109,.1);}
+.form-group textarea{resize:vertical;min-height:80px;}
+.form-hint{font-size:12px;color:var(--gray-400);margin-top:4px;}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 20px;border-radius:var(--radius-sm);font-size:14px;font-weight:500;cursor:pointer;transition:all .15s;border:none;font-family:inherit;}
+.btn-primary{background:var(--primary);color:#fff;}.btn-primary:hover{background:var(--primary-dark);}
+.btn-secondary{background:var(--gray-100);color:var(--gray-700);}.btn-secondary:hover{background:var(--gray-200);}
+.btn-outline{background:transparent;border:1.5px solid var(--gray-300);color:var(--gray-600);}.btn-outline:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-light);}
+.btn-success{background:var(--green);color:#fff;}.btn-success:hover{background:#059669;}
+.btn-danger{background:var(--red);color:#fff;}.btn-danger:hover{background:#dc2626;}
+.btn-sm{padding:6px 12px;font-size:13px;}.btn-lg{padding:13px 28px;font-size:15px;}.btn-full{width:100%;}
+.btn:disabled{opacity:.5;cursor:not-allowed;}
+.page-header{margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+.page-title{font-size:22px;font-weight:700;color:var(--gray-900);}
+.page-subtitle{font-size:14px;color:var(--gray-500);margin-top:2px;}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:16px;margin-bottom:24px;}
+.stat-card{background:#fff;border-radius:var(--radius);padding:20px;box-shadow:var(--shadow-sm);border:1px solid var(--gray-100);}
+.stat-label{font-size:13px;color:var(--gray-500);margin-bottom:8px;}
+.stat-value{font-size:28px;font-weight:700;color:var(--gray-900);}
+.stat-value.primary{color:var(--primary);}.stat-value.yellow{color:var(--yellow);}.stat-value.green{color:var(--green);}.stat-value.blue{color:var(--blue);}
+.card{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow-sm);border:1px solid var(--gray-100);overflow:hidden;margin-bottom:16px;}
+.card-header{padding:16px 20px;border-bottom:1px solid var(--gray-100);display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.card-title{font-size:16px;font-weight:600;color:var(--gray-800);}
+.card-body{padding:20px;}
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:14px;}
+thead th{text-align:left;padding:12px 16px;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--gray-500);background:var(--gray-50);border-bottom:1px solid var(--gray-200);}
+tbody td{padding:14px 16px;border-bottom:1px solid var(--gray-100);color:var(--gray-700);vertical-align:middle;}
+tbody tr:last-child td{border-bottom:none;}tbody tr:hover td{background:var(--gray-50);}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:500;}
+.badge-pending{background:#fef3c7;color:#92400e;}.badge-op-approved{background:#dbeafe;color:#1e40af;}.badge-approved{background:#d1fae5;color:#065f46;}.badge-rejected{background:#fee2e2;color:#991b1b;}.badge-submitted{background:#ede9fe;color:#5b21b6;}.badge-active{background:#d1fae5;color:#065f46;}.badge-ended{background:#f3f4f6;color:#6b7280;}.badge-draft{background:#fef3c7;color:#92400e;}
+.tabs{display:flex;gap:4px;background:var(--gray-100);padding:4px;border-radius:var(--radius-sm);margin-bottom:20px;width:fit-content;flex-wrap:wrap;}
+.tab-btn{padding:7px 16px;border-radius:6px;font-size:13px;font-weight:500;color:var(--gray-500);cursor:pointer;transition:all .2s;border:none;background:none;font-family:inherit;}
+.tab-btn.active{background:#fff;color:var(--gray-800);box-shadow:var(--shadow-sm);}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;align-items:center;justify-content:center;padding:20px;}
+.modal-overlay.open{display:flex;}
+.modal{background:#fff;border-radius:var(--radius);box-shadow:0 25px 50px rgba(0,0,0,.2);width:100%;max-width:640px;max-height:90vh;overflow-y:auto;}
+.modal-header{padding:20px 24px 16px;border-bottom:1px solid var(--gray-100);display:flex;align-items:center;justify-content:space-between;}
+.modal-title{font-size:18px;font-weight:700;}
+.modal-close{width:32px;height:32px;border-radius:8px;border:none;background:var(--gray-100);cursor:pointer;font-size:18px;color:var(--gray-500);}
+.modal-close:hover{background:var(--gray-200);}
+.modal-body{padding:24px;}
+.modal-footer{padding:16px 24px;border-top:1px solid var(--gray-100);display:flex;gap:10px;justify-content:flex-end;}
+.toast-container{position:fixed;top:68px;right:20px;z-index:999;display:flex;flex-direction:column;gap:10px;}
+.toast{background:var(--gray-900);color:#fff;padding:12px 18px;border-radius:var(--radius-sm);font-size:14px;box-shadow:var(--shadow-lg);animation:slide-in .25s ease;min-width:220px;display:flex;align-items:center;gap:8px;}
+.toast.success{background:var(--green);}.toast.error{background:var(--red);}.toast.info{background:var(--blue);}
+@keyframes slide-in{from{transform:translateX(40px);opacity:0;}to{transform:translateX(0);opacity:1;}}
+.empty-state{text-align:center;padding:48px 20px;color:var(--gray-400);}
+.empty-state .icon{font-size:48px;margin-bottom:12px;}
+.task-banner{background:linear-gradient(135deg,var(--primary) 0%,#c22d58 100%);border-radius:var(--radius);padding:28px;color:#fff;margin-bottom:20px;position:relative;overflow:hidden;}
+.task-banner::before{content:'';position:absolute;top:-30px;right:-30px;width:140px;height:140px;background:rgba(255,255,255,.08);border-radius:50%;}
+.task-banner h2{font-size:22px;font-weight:700;margin-bottom:8px;}
+.task-banner p{font-size:14px;opacity:.85;line-height:1.6;}
+.task-meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:16px;}
+.task-meta-item{display:flex;align-items:center;gap:6px;font-size:13px;opacity:.9;}
+.brief-card{background:#fff;border-radius:var(--radius);border:1px solid var(--gray-200);padding:20px;margin-bottom:16px;}
+.brief-card-header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px;}
+.brief-creator-info h4{font-size:15px;font-weight:600;}
+.brief-creator-info p{font-size:13px;color:var(--gray-500);margin-top:2px;}
+.brief-field{margin-bottom:10px;}
+.brief-field-label{font-size:12px;font-weight:600;color:var(--gray-400);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px;}
+.brief-field-value{font-size:14px;color:var(--gray-700);line-height:1.6;}
+.brief-actions{display:flex;gap:8px;margin-top:14px;padding-top:14px;border-top:1px solid var(--gray-100);}
+.steps{display:flex;align-items:center;margin-bottom:28px;overflow-x:auto;padding-bottom:4px;}
+.step-item{display:flex;align-items:center;flex-shrink:0;}
+.step-dot{width:28px;height:28px;border-radius:50%;background:var(--gray-200);color:var(--gray-400);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;flex-shrink:0;}
+.step-dot.active{background:var(--primary);color:#fff;}.step-dot.done{background:var(--green);color:#fff;}
+.step-label{font-size:12px;color:var(--gray-500);margin-left:8px;white-space:nowrap;}
+.step-label.active{color:var(--primary);font-weight:600;}.step-label.done{color:var(--green);}
+.step-line{flex:1;min-width:20px;height:2px;background:var(--gray-200);margin:0 4px;flex-shrink:0;}
+.step-line.done{background:var(--green);}
+.history-list{display:flex;flex-direction:column;gap:12px;}
+.history-item{background:var(--gray-50);border-radius:var(--radius-sm);padding:14px 16px;border-left:3px solid var(--gray-300);}
+.history-item.latest{border-left-color:var(--primary);background:var(--primary-light);}
+.history-item-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+.notif-card{border-radius:var(--radius);padding:16px 20px;margin-bottom:16px;display:flex;gap:12px;align-items:flex-start;background:var(--primary-light);border:1.5px solid #f9a8c0;}
+.notif-card.success{background:#d1fae5;border-color:#6ee7b7;}
+.notif-icon{font-size:22px;margin-top:2px;}
+.notif-title{font-size:15px;font-weight:600;color:var(--primary-dark);margin-bottom:4px;}
+.notif-card.success .notif-title{color:#065f46;}
+.notif-body{font-size:13px;color:var(--gray-600);line-height:1.6;}
+.notice-box{background:#fffbeb;border:1px solid #fde68a;border-radius:var(--radius-sm);padding:12px 16px;font-size:13px;color:#92400e;margin-bottom:18px;line-height:1.6;}
+.notice-box.red{background:#fef2f2;border-color:#fca5a5;color:#991b1b;}
+.notice-box.green{background:#d1fae5;border-color:#6ee7b7;color:#065f46;}
+.img-preview{max-width:100%;max-height:200px;border-radius:var(--radius-sm);border:1px solid var(--gray-200);margin-top:8px;object-fit:cover;}
+.hint-img{max-width:100%;border-radius:8px;margin-top:8px;border:1px solid var(--gray-200);}
+.link-value{color:var(--blue);text-decoration:none;word-break:break-all;font-size:13px;}
+.link-value:hover{text-decoration:underline;}
+.section-sep{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--gray-400);margin-bottom:12px;margin-top:4px;}
+input[type="file"]{padding:8px;background:var(--gray-50);border:1.5px dashed var(--gray-300);border-radius:var(--radius-sm);cursor:pointer;width:100%;}
+.divider{border:none;border-top:1px solid var(--gray-100);margin:20px 0;}
+.text-muted{color:var(--gray-400);font-size:13px;}
+.fw-600{font-weight:600;}
+.mt-4{margin-top:4px;}.mt-8{margin-top:8px;}.mt-16{margin-top:16px;}.mb-16{margin-bottom:16px;}
+.track-group{background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius-sm);padding:14px;margin-bottom:10px;}
+.track-group-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.track-group-title{font-size:13px;font-weight:600;color:var(--gray-600);}
+.track-del-btn{background:none;border:none;cursor:pointer;color:var(--gray-400);font-size:18px;padding:2px 6px;border-radius:4px;}
+.track-del-btn:hover{color:var(--red);background:#fee2e2;}
+.add-track-btn{background:none;border:1.5px dashed var(--gray-300);border-radius:var(--radius-sm);padding:8px 16px;font-size:13px;color:var(--gray-500);cursor:pointer;width:100%;text-align:center;transition:all .2s;display:block;}
+.add-track-btn:hover{border-color:var(--primary);color:var(--primary);}
+.confirm-submit-box{background:#fff3cd;border:1.5px solid #ffc107;border-radius:var(--radius-sm);padding:14px 16px;margin-bottom:16px;font-size:14px;color:#856404;line-height:1.6;}
+.activity-group{margin-bottom:24px;}
+.activity-group-header{background:var(--gray-100);padding:12px 16px;border-radius:var(--radius-sm);margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;}
+.activity-group-title{font-size:15px;font-weight:600;color:var(--gray-800);}
+.task-list-item{background:#fff;border:1px solid var(--gray-200);border-radius:var(--radius-sm);padding:16px;margin-bottom:12px;}
+.task-list-item:hover{border-color:var(--primary);box-shadow:var(--shadow-sm);}
+.task-list-title{font-size:15px;font-weight:600;color:var(--gray-800);}
+.task-list-desc{font-size:13px;color:var(--gray-500);margin-top:4px;line-height:1.5;}
+.task-list-meta{display:flex;flex-wrap:wrap;gap:12px;margin-top:10px;font-size:12px;color:var(--gray-400);}
+@media(max-width:600px){.role-cards{grid-template-columns:1fr;}.main{padding:16px;}.stats-grid{grid-template-columns:repeat(2,1fr);}
+.auth-card{padding:24px;}.topbar{padding:0 16px;}.modal-body{padding:16px;}.modal-footer{padding:12px 16px;}}
+</style>
+</head>
+<body>
+<div class="toast-container" id="toastContainer"></div>
+<div class="topbar" id="topbar">
+  <div class="topbar-logo"><div class="logo-icon">✍</div>约稿管理平台</div>
+  <div class="topbar-right" id="topbarRight"><button class="btn btn-secondary btn-sm" onclick="goHome()">← 返回首页</button></div>
+</div>
+<div class="app"><div class="main">
+
+<!-- HOME -->
+<div class="screen active" id="screen-home">
+  <div class="home-hero">
+    <div style="font-size:52px;margin-bottom:16px">✍️</div>
+    <h1>约稿管理平台</h1><p>运营发布任务 · 创作者提交企划 · 多方协同审核</p>
+    <div class="role-cards">
+      <div class="role-card" onclick="enterRole('operator')"><div class="icon">🎛️</div><h3>运营后台</h3><p>发布任务，审核企划，管理用户</p></div>
+      <div class="role-card" onclick="enterRole('vendor')"><div class="icon">🏢</div><h3>厂商审核</h3><p>按活动查看企划，进行终审</p></div>
+      <div class="role-card" onclick="enterCreator()"><div class="icon">🎨</div><h3>创作者入口</h3><p>登录注册，参加活动，提交企划</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- AUTH -->
+<div class="screen" id="screen-auth">
+  <div class="auth-card">
+    <h2 id="authTitle">登录</h2><div class="subtitle" id="authSubtitle">请输入访问密码</div>
+    <div class="form-group"><label>密码 <span class="required">*</span></label><input type="password" id="authPassword"></div>
+    <button class="btn btn-primary btn-full btn-lg" onclick="doAuth()">进入</button>
+    <div class="mt-16 text-muted" style="text-align:center"><a href="#" onclick="goHome();return false" style="color:var(--gray-400);font-size:13px">← 返回首页</a></div>
+  </div>
+</div>
+
+<!-- OPERATOR -->
+<div class="screen" id="screen-operator">
+  <div class="page-header">
+    <div><div class="page-title">运营后台</div><div class="page-subtitle">管理约稿任务，审核创作者企划</div></div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-secondary btn-sm" onclick="renderOpStats();renderOpTasks();renderOpBriefs();renderOpSubmissions();toast('已刷新','success')">🔄 刷新</button>
+      <button class="btn btn-primary" onclick="openCreateTask()">＋ 发布新任务</button>
+    </div>
+  </div>
+  <div class="stats-grid" id="opStats"></div>
+  <div class="tabs">
+    <button class="tab-btn active" onclick="opTab('tasks',this)">📋 任务管理</button>
+    <button class="tab-btn" onclick="opTab('briefs',this)">📝 企划审核</button>
+    <button class="tab-btn" onclick="opTab('submissions',this)">📦 提交内容</button>
+    <button class="tab-btn" onclick="opTab('users',this)">👤 用户管理</button>
+  </div>
+  <div id="opTab-tasks"><div class="card"><div class="card-header"><div class="card-title">所有任务</div></div><div class="table-wrap"><div id="opTaskList"></div></div></div></div>
+  <div id="opTab-briefs" style="display:none"><div id="opBriefList"></div></div>
+  <div id="opTab-submissions" style="display:none"><div id="opSubmissionList"></div></div>
+  <div id="opTab-users" style="display:none"><div class="card"><div class="card-header"><div class="card-title">注册用户列表</div></div><div id="opUserList"></div></div></div>
+</div>
+
+<!-- MODAL EDIT TASK -->
+<div class="modal-overlay" id="modalEditTask">
+  <div class="modal" style="max-width:600px">
+    <div class="modal-header"><div class="modal-title">编辑任务</div><button class="modal-close" onclick="closeModal('modalEditTask')">×</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="editTaskId">
+      <div class="form-group"><label>任务标题 <span class="required">*</span></label><input type="text" id="editTaskTitle"></div>
+      <div class="form-group"><label>任务说明 <span class="required">*</span></label><textarea id="editTaskDesc" rows="3"></textarea></div>
+      <div class="form-group"><label>状态</label>
+        <select id="editTaskStatus">
+          <option value="active">进行中</option>
+          <option value="draft">草稿</option>
+          <option value="ended">已结束</option>
+        </select>
+      </div>
+      <div class="form-group"><label>参与赛道 <span class="required">*</span></label>
+        <div id="editTaskTrackBuilder"></div>
+        <button type="button" class="btn btn-outline btn-sm" style="margin-top:8px" onclick="addTrackRow('editTaskTrackBuilder')">+ 添加赛道</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div class="form-group"><label>企划提交截止时间</label><input type="datetime-local" id="editTaskBriefDeadline"></div>
+        <div class="form-group"><label>笔记提交截止时间</label><input type="datetime-local" id="editTaskContentDeadline"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div class="form-group"><label>每人最多提交企划数</label><input type="number" id="editTaskMaxSubmit" min="0" value="0"><div class="form-hint">0 表示不限制</div></div>
+        <div class="form-group"><label>每人最多通过企划数</label><input type="number" id="editTaskMaxApprove" min="0" value="0"><div class="form-hint">0 表示不限制</div></div>
+      </div>
+      <div class="form-group"><label>活动口令 <span class="required">*</span></label><input type="text" id="editTaskPassword"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modalEditTask')">取消</button>
+      <button class="btn btn-primary" onclick="saveEditTask()">保存修改</button>
+    </div>
+  </div>
+</div>
+
+<!-- VENDOR -->
+<div class="screen" id="screen-vendor">
+  <div class="page-header"><div><div class="page-title">厂商审核台</div><div class="page-subtitle">按活动查看运营已通过企划，进行终审</div></div><button class="btn btn-secondary btn-sm" onclick="renderVendor();toast('已刷新','success')">🔄 刷新</button></div>
+  <div class="stats-grid" id="vendorStats"></div>
+  <div id="vendorBriefArea"></div>
+</div>
+
+<!-- CREATOR LOGIN -->
+<div class="screen" id="screen-creator-login">
+  <div class="auth-card">
+    <h2>🎨 创作者登录</h2><div class="subtitle">登录后查看活动列表</div>
+    <div class="form-group"><label>用户名 <span class="required">*</span></label><input type="text" id="creatorLoginUser"></div>
+    <div class="form-group"><label>密码 <span class="required">*</span></label><input type="password" id="creatorLoginPass"></div>
+    <button class="btn btn-primary btn-full btn-lg" onclick="doCreatorLogin()">登录</button>
+    <div class="mt-16" style="text-align:center"><a href="#" onclick="showCreatorRegister();return false" style="color:var(--primary);font-size:14px">还没有账号？立即注册</a></div>
+    <div class="mt-8 text-muted" style="text-align:center"><a href="#" onclick="goHome();return false" style="color:var(--gray-400);font-size:13px">← 返回首页</a></div>
+  </div>
+</div>
+
+<!-- CREATOR REGISTER -->
+<div class="screen" id="screen-creator-register">
+  <div class="auth-card" style="max-width:560px">
+    <h2>📝 创作者注册</h2><div class="subtitle">完善信息后即可参加约稿活动</div>
+    <div class="form-group"><label>用户名（登录用）<span class="required">*</span></label><input type="text" id="regUsername"></div>
+    <div class="form-group"><label>密码 <span class="required">*</span></label><input type="password" id="regPassword"></div>
+    <div class="form-group"><label>确认密码 <span class="required">*</span></label><input type="password" id="regPasswordConfirm"></div>
+    <div class="form-group"><label>作者ID <span class="required">*</span></label><input type="text" id="regAuthorId" placeholder="如：69784c65000000002101300d"><div class="form-hint">小红书主页链接中 / 和 ? 之间的字符，如：69784c65000000002101300d</div></div>
+    <div class="form-group"><label>小红书号 <span class="required">*</span></label><input type="text" id="regXhsId"></div>
+    <div class="form-group"><label>小红书主页链接 <span class="required">*</span></label><input type="text" id="regProfileLink"></div>
+    <div class="form-group"><label>小红书主页截图 <span class="required">*</span></label><input type="file" id="regProfileScreenshot" accept="image/*" onchange="previewRegScreenshot(event)"><img id="regScreenshotPreview" class="img-preview" style="display:none"></div>
+    <button class="btn btn-primary btn-full btn-lg" onclick="doCreatorRegister()">注册</button>
+    <div class="mt-16" style="text-align:center"><a href="#" onclick="showCreatorLogin();return false" style="color:var(--gray-500);font-size:14px">已有账号？去登录</a></div>
+  </div>
+</div>
+
+<!-- CREATOR DASH -->
+<div class="screen" id="screen-creator-dash">
+  <div class="page-header">
+    <div><div class="page-title">创作者中心</div><div class="page-subtitle" id="creatorDashSubtitle"></div></div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-secondary btn-sm" onclick="renderCreatorDash();toast('已刷新','success')">🔄 刷新</button>
+      <button class="btn btn-secondary btn-sm" onclick="creatorLogout()">退出登录</button>
+    </div>
+  </div>
+  <div class="tabs">
+    <button class="tab-btn active" onclick="creatorTab('available',this)">🔥 可参加活动</button>
+    <button class="tab-btn" onclick="creatorTab('joined',this)">📌 我的活动</button>
+  </div>
+  <div id="creatorTab-available"></div>
+  <div id="creatorTab-joined" style="display:none"></div>
+</div>
+
+<!-- CREATOR TASK -->
+<div class="screen" id="screen-creator-task">
+  <div class="page-header">
+    <div><div class="page-title" id="creatorTaskTitle">活动详情</div><div class="page-subtitle"><a href="#" onclick="backToCreatorDash();return false" style="color:var(--primary)">← 返回活动列表</a></div></div>
+    <button class="btn btn-secondary btn-sm" onclick="renderCreatorTaskView();toast('已刷新','success')">🔄 刷新</button>
+  </div>
+  <div class="task-banner" id="creatorTaskBanner"></div>
+  <div class="steps" id="creatorSteps"></div>
+  <div id="creatorNotifArea"></div>
+  <div id="creatorBriefArea"></div>
+</div>
+
+</div></div>
+
+<!-- MODALS -->
+<div class="modal-overlay" id="modalCreateTask">
+  <div class="modal" style="max-width:680px">
+    <div class="modal-header"><div class="modal-title">✍️ 发布约稿任务</div><button class="modal-close" onclick="closeModal('modalCreateTask')">×</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label>任务标题 <span class="required">*</span></label><input type="text" id="taskTitle"></div>
+      <div class="form-group"><label>任务说明 <span class="required">*</span></label><textarea id="taskDesc" rows="3"></textarea></div>
+      <div class="form-group"><label>任务状态</label><select id="taskStatus"><option value="active">进行中</option><option value="draft">草稿</option><option value="ended">已结束</option></select></div>
+      <div class="form-group"><label>参与赛道 <span class="required">*</span></label><div id="trackBuilder"></div><button class="add-track-btn" onclick="addTrack()">＋ 新增赛道</button></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div class="form-group"><label>企划提交截止时间</label><input type="datetime-local" id="taskBriefDeadline" step="1"></div>
+        <div class="form-group"><label>笔记提交截止时间</label><input type="datetime-local" id="taskContentDeadline" step="1"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div class="form-group"><label>每人最多提交企划数</label><input type="number" id="taskMaxSubmit" min="0" value="0" placeholder="0=不限"><div class="form-hint">0 表示不限制提交次数</div></div>
+        <div class="form-group"><label>每人最多通过企划数</label><input type="number" id="taskMaxApprove" min="0" value="0" placeholder="0=不限"><div class="form-hint">0 表示不限制通过次数</div></div>
+      </div>
+      <div class="form-group"><label>活动口令 <span class="required">*</span></label><input type="text" id="taskPassword"></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('modalCreateTask')">取消</button><button class="btn btn-primary" onclick="createTask()">发布任务</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalJoinTask">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header"><div class="modal-title">🔐 参加活动</div><button class="modal-close" onclick="closeModal('modalJoinTask')">×</button></div>
+    <div class="modal-body">
+      <div class="notice-box">输入活动口令即可参加该活动</div>
+      <div class="form-group"><label>活动口令 <span class="required">*</span></label><input type="text" id="joinTaskPassword"></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('modalJoinTask')">取消</button><button class="btn btn-primary" onclick="confirmJoinTask()">确认参加</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalOpApprove">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header"><div class="modal-title">✓ 通过企划</div><button class="modal-close" onclick="closeModal('modalOpApprove')">×</button></div>
+    <div class="modal-body">
+      <div class="notice-box">备注为选填</div>
+      <div class="form-group"><label>给厂商的备注（选填）</label><textarea id="opRemarkVendor" rows="3"></textarea></div>
+      <div class="form-group"><label>给作者的备注（选填）</label><textarea id="opRemarkCreator" rows="3"></textarea></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('modalOpApprove')">取消</button><button class="btn btn-success" onclick="confirmOpApprove()">确认通过</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalVendorApprove">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header"><div class="modal-title">✓ 通过企划</div><button class="modal-close" onclick="closeModal('modalVendorApprove')">×</button></div>
+    <div class="modal-body">
+      <div class="notice-box">备注为选填</div>
+      <div class="form-group"><label>给运营的备注（选填）</label><textarea id="vendorRemarkOperator" rows="3"></textarea></div>
+      <div class="form-group"><label>给作者的备注（选填）</label><textarea id="vendorRemarkCreator" rows="3"></textarea></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('modalVendorApprove')">取消</button><button class="btn btn-success" onclick="confirmVendorApprove()">确认通过</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalBriefDetail">
+  <div class="modal"><div class="modal-header"><div class="modal-title">企划详情</div><button class="modal-close" onclick="closeModal('modalBriefDetail')">×</button></div>
+  <div class="modal-body" id="modalBriefDetailBody"></div><div class="modal-footer" id="modalBriefDetailFooter"></div></div>
+</div>
+
+<div class="modal-overlay" id="modalSubmitBrief">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">📝 提交创作企划</div><button class="modal-close" onclick="closeModal('modalSubmitBrief')">×</button></div>
+    <div class="modal-body">
+      <div class="notice-box">⚠️ 每次提交均为独立记录，提交后无法修改</div>
+      <div class="section-sep">基本信息</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div class="form-group"><label>创作者昵称 <span class="required">*</span></label><input type="text" id="briefName"></div>
+        <div class="form-group"><label>作者ID <span class="required">*</span></label><input type="text" id="briefAuthorId" placeholder="如：69784c65000000002101300d"><div class="form-hint">小红书主页链接中 / 和 ? 之间的字符</div></div>
+      </div>
+      <div class="form-group"><label>主页链接 <span class="required">*</span></label><input type="text" id="briefProfile"></div>
+      <div class="section-sep">代表作</div>
+      <div class="form-group"><label>代表作链接 <span class="required">*</span></label><input type="text" id="briefWork"></div>
+      <div class="form-group"><label>自荐说明 <span class="required">*</span></label><textarea id="briefWorkDesc" rows="3"></textarea></div>
+      <div class="section-sep">企划内容</div>
+      <div class="form-group"><label>参与赛道 <span class="required">*</span></label><select id="briefTrack"><option value="">请选择...</option></select></div>
+      <div class="form-group"><label>创意脑洞描述 <span class="required">*</span></label><textarea id="briefIdea" rows="4"></textarea></div>
+      <div class="form-group"><label>创意脚本（选填）</label><textarea id="briefScript" rows="3"></textarea></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('modalSubmitBrief')">取消</button><button class="btn btn-primary" onclick="preSubmitBrief()">提交企划</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalConfirmBrief">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header"><div class="modal-title">⚠️ 确认提交</div><button class="modal-close" onclick="closeModal('modalConfirmBrief')">×</button></div>
+    <div class="modal-body"><div class="confirm-submit-box">提交后无法修改这份企划<br><br>确认提交吗？</div></div>
+    <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('modalConfirmBrief')">再想想</button><button class="btn btn-primary" onclick="doSubmitBrief()">确认提交</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalSubmitContent">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">📦 提交发布内容</div><button class="modal-close" onclick="closeModal('modalSubmitContent')">×</button></div>
+    <div class="modal-body">
+      <div class="notice-box green">🎉 企划已通过审核！</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div class="form-group"><label>作者昵称 <span class="required">*</span></label><input type="text" id="contentName"></div>
+        <div class="form-group"><label>作者ID <span class="required">*</span></label><input type="text" id="contentAuthorId" placeholder="如：69784c65000000002101300d"><div class="form-hint">小红书主页链接中 / 和 ? 之间的字符</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div class="form-group"><label>笔记ID <span class="required">*</span></label><input type="text" id="contentNoteId" placeholder="如：6a0c2a400000000036002202"><div class="form-hint">笔记链接中 / 和 ? 之间的字符</div></div>
+        <div class="form-group"><label>发布时间 <span class="required">*</span></label><input type="datetime-local" id="contentPublishTime" step="1"></div>
+      </div>
+      <div class="form-group"><label>发布链接 <span class="required">*</span></label><input type="text" id="contentLink"></div>
+      <div class="form-group"><label>数据截图（选填）</label><input type="file" id="contentScreenshot" accept="image/*" onchange="previewScreenshot(event)"><img id="screenshotPreview" class="img-preview" style="display:none"></div>
+      <div class="form-group"><label>补充说明（选填）</label><textarea id="contentNote" rows="2"></textarea></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('modalSubmitContent')">取消</button><button class="btn btn-success" onclick="submitContent()">提交内容</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalRejectReason">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header"><div class="modal-title">❌ 填写拒绝原因</div><button class="modal-close" onclick="closeModal('modalRejectReason')">×</button></div>
+    <div class="modal-body"><div class="form-group"><label>拒绝原因 <span class="required">*</span></label><textarea id="rejectReason" rows="4"></textarea></div></div>
+    <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('modalRejectReason')">取消</button><button class="btn btn-danger" onclick="confirmReject()">确认拒绝</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalUserDetail">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-header"><div class="modal-title">用户详情</div><button class="modal-close" onclick="closeModal('modalUserDetail')">×</button></div>
+    <div class="modal-body" id="modalUserDetailBody"></div>
+    <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('modalUserDetail')">关闭</button></div>
+  </div>
+</div>
+
+<script>
+const DB_KEY='collab_platform_v3';
+function loadDB(){const def={tasks:[],briefs:[],contents:[],users:[],userTasks:[]};try{const d=JSON.parse(localStorage.getItem(DB_KEY));if(!d)return def;// 补全缺失字段，防止旧数据没有某些 key
+return Object.assign({},def,d);}catch(e){return def;}}
+function saveDB(db){localStorage.setItem(DB_KEY,JSON.stringify(db));}
+function getDB(){return loadDB();}
+
+let currentRole=null,currentCreatorUser=null,pendingJoinTaskId=null,pendingApproveBriefId=null,pendingRejectBriefId=null,pendingRejectRole=null,_pendingBriefData=null,currentCreatorTaskId=null;
+
+function goHome(){currentRole=null;currentCreatorUser=null;showScreen('home');document.getElementById('topbarRight').innerHTML='<button class="btn btn-secondary btn-sm" onclick="goHome()">← 返回首页</button>';}
+function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById('screen-'+id).classList.add('active');}
+function enterRole(role){currentRole=role;showScreen('auth');document.getElementById('authTitle').textContent=role==='operator'?'运营后台':'厂商审核台';}
+function doAuth(){const pwd=document.getElementById('authPassword').value.trim();if(!pwd){toast('请输入密码','error');return;}const passwords={operator:'op2024',vendor:'vendor2024'};if(pwd===passwords[currentRole]){document.getElementById('authPassword').value='';if(currentRole==='operator'){showScreen('operator');setRoleBadge('operator','运营后台');renderOperator();}else{showScreen('vendor');setRoleBadge('vendor','厂商');renderVendor();}toast('登录成功','success');}else{toast('密码错误','error');}}
+function setRoleBadge(role,label){const cm={operator:'operator',vendor:'vendor',creator:'creator'};document.getElementById('topbarRight').innerHTML='<span class="role-badge '+cm[role]+'">'+label+'</span><button class="btn btn-secondary btn-sm" onclick="goHome()">退出</button>';}
+
+function enterCreator(){showCreatorLogin();}
+function showCreatorLogin(){showScreen('creator-login');}
+function showCreatorRegister(){showScreen('creator-register');}
+function doCreatorLogin(){const user=document.getElementById('creatorLoginUser').value.trim(),pass=document.getElementById('creatorLoginPass').value;if(!user||!pass){toast('请填写用户名和密码','error');return;}const db=getDB();const u=db.users.find(x=>x.username===user&&x.password===pass);if(!u){toast('用户名或密码错误','error');return;}currentCreatorUser=u;showScreen('creator-dash');setRoleBadge('creator',u.username);renderCreatorDash();toast('登录成功','success');}
+function doCreatorRegister(){const user=document.getElementById('regUsername').value.trim(),pass=document.getElementById('regPassword').value,passConfirm=document.getElementById('regPasswordConfirm').value,authorId=document.getElementById('regAuthorId').value.trim(),xhsId=document.getElementById('regXhsId').value.trim(),profileLink=document.getElementById('regProfileLink').value.trim();const sp=document.getElementById('regScreenshotPreview');const screenshotData=sp&&sp.src&&!sp.src.endsWith(location.href)?sp.src:'';if(!user||!pass||!passConfirm||!authorId||!xhsId||!profileLink||!screenshotData){toast('请填写所有必填字段','error');return;}if(pass!==passConfirm){toast('两次输入的密码不一致','error');return;}const db=getDB();if(db.users.find(x=>x.username===user)){toast('用户名已存在','error');return;}if(db.users.find(x=>x.authorId===authorId)){toast('该作者ID已注册过账号','error');return;}db.users.push({id:uid(),username:user,password:pass,authorId,xhsId,profileLink,profileScreenshot:screenshotData,createdAt:Date.now()});saveDB(db);toast('注册成功，请登录','success');showCreatorLogin();}
+function creatorLogout(){currentCreatorUser=null;showCreatorLogin();document.getElementById('topbarRight').innerHTML='<button class="btn btn-secondary btn-sm" onclick="goHome()">← 返回首页</button>';}
+function previewRegScreenshot(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{const img=document.getElementById('regScreenshotPreview');img.src=ev.target.result;img.style.display='block';};r.readAsDataURL(f);}
+
+let trackCount=0;
+function initTrackBuilder(){document.getElementById('trackBuilder').innerHTML='';trackCount=0;addTrack();}
+function addTrack(){const container=document.getElementById('trackBuilder');const idx=trackCount++;const div=document.createElement('div');div.className='track-group';div.id='track-'+idx;div.innerHTML='<div class="track-group-header"><span class="track-group-title">赛道 '+(idx+1)+'</span>'+(idx>0?'<button class="track-del-btn" onclick="removeTrack(\'track-'+idx+'\')">×</button>':'')+'</div><div class="form-group" style="margin-bottom:8px"><input type="text" class="track-name" placeholder="赛道名称（必填）"></div><div class="form-group" style="margin-bottom:0"><input type="text" class="track-desc" placeholder="赛道描述（选填）"></div>';container.appendChild(div);}
+function removeTrack(id){document.getElementById(id)&&document.getElementById(id).remove();renumberTracks();}
+function renumberTracks(){document.querySelectorAll('.track-group').forEach((g,i)=>{const t=g.querySelector('.track-group-title');if(t)t.textContent='赛道 '+(i+1);});}
+function getTracksFromBuilder(){const tracks=[];document.querySelectorAll('.track-group').forEach(g=>{const name=(g.querySelector('.track-name')||{value:''}).value.trim();const desc=(g.querySelector('.track-desc')||{value:''}).value.trim();if(name)tracks.push({name,desc});});return tracks;}
+
+function cleanOrphanData(){const db=getDB();const taskIds=new Set(db.tasks.map(t=>t.id));const briefIds=new Set(db.briefs.map(b=>b.id));const before=db.contents.length;db.briefs=db.briefs.filter(b=>taskIds.has(b.taskId));db.contents=(db.contents||[]).filter(c=>briefIds.has(c.briefId));db.userTasks=(db.userTasks||[]).filter(ut=>taskIds.has(ut.taskId));if(db.contents.length!==before)saveDB(db);}
+function renderOperator(){cleanOrphanData();renderOpStats();const activeTab=document.querySelector('#screen-operator .tab-btn.active');const tab=activeTab?activeTab.getAttribute('onclick').match(/opTab\('(\w+)'/)?.[1]:'tasks';if(tab==='briefs')renderOpBriefs();else if(tab==='submissions')renderOpSubmissions();else if(tab==='users')renderOpUsers();else renderOpTasks();}
+function renderOpStats(){const raw=localStorage.getItem('collab_platform_v3');const db=raw?JSON.parse(raw):{tasks:[],briefs:[],contents:[],users:[],userTasks:[]};const tasks=db.tasks||[];const briefs=db.briefs||[];const contents=db.contents||[];const s=document.getElementById('opStats');if(!s)return;const ts=new Date().toLocaleTimeString('zh',{hour:'2-digit',minute:'2-digit',second:'2-digit'});s.innerHTML='<div class="stat-card"><div class="stat-label">总任务数</div><div class="stat-value blue">'+tasks.length+'</div></div><div class="stat-card"><div class="stat-label">待运营审核</div><div class="stat-value yellow">'+briefs.filter(b=>b.status==='pending').length+'</div></div><div class="stat-card"><div class="stat-label">待厂商审核</div><div class="stat-value primary">'+briefs.filter(b=>b.status==='op_approved').length+'</div></div><div class="stat-card"><div class="stat-label">最终通过</div><div class="stat-value green">'+briefs.filter(b=>b.status==='approved').length+'</div></div><div class="stat-card"><div class="stat-label">已提交内容</div><div class="stat-value">'+contents.length+'</div><div style="font-size:11px;color:var(--gray-400);margin-top:2px">更新于 '+ts+'</div></div>';}
+function renderOpTasks(){const db=getDB();const container=document.getElementById('opTaskList');if(!db.tasks.length){container.innerHTML='<div class="empty-state"><div class="icon">📋</div><p>暂无任务</p></div>';return;}const sm={active:'badge-active',ended:'badge-ended',draft:'badge-draft'};const sl={active:'进行中',ended:'已结束',draft:'草稿'};container.innerHTML='<table><thead><tr><th>任务名称</th><th>状态</th><th>赛道</th><th>企划截止</th><th>笔记截止</th><th>提交/通过上限</th><th>企划数</th><th>口令</th><th>操作</th></tr></thead><tbody>'+db.tasks.map(t=>{const bc=db.briefs.filter(b=>b.taskId===t.id).length;const st=t.status||'active';return'<tr><td class="fw-600">'+t.title+'</td><td><span class="badge '+(sm[st]||'badge-active')+'">'+(sl[st]||st)+'</span></td><td>'+(t.tracks||[]).map(tr=>'<span class="badge badge-op-approved" style="margin:2px">'+tr.name+'</span>').join('')+'</td><td style="font-size:13px">'+(t.briefDeadline?formatDatetime(t.briefDeadline):'—')+'</td><td style="font-size:13px">'+(t.contentDeadline?formatDatetime(t.contentDeadline):'—')+'</td><td style="font-size:13px">'+(t.maxSubmit||0?t.maxSubmit:'不限')+' / '+(t.maxApprove||0?t.maxApprove:'不限')+'</td><td>'+bc+'</td><td><code style="background:var(--gray-100);padding:2px 6px;border-radius:4px;font-size:12px">'+t.password+'</code></td><td><button class="btn btn-outline btn-sm" onclick="viewTaskDetail(\''+t.id+'\')">详情</button> <button class="btn btn-sm" style="background:#fef3c7;color:#92400e;border:none" onclick="openEditTask(\''+t.id+'\')">编辑</button> <button class="btn btn-danger btn-sm" onclick="deleteTask(\''+t.id+'\')">删除</button></td></tr>';}).join('')+'</tbody></table>';}
+function openEditTask(taskId){const db=getDB();const task=db.tasks.find(t=>t.id===taskId);if(!task)return;document.getElementById('editTaskId').value=taskId;document.getElementById('editTaskTitle').value=task.title||'';document.getElementById('editTaskDesc').value=task.desc||'';document.getElementById('editTaskStatus').value=task.status||'active';document.getElementById('editTaskBriefDeadline').value=task.briefDeadline||'';document.getElementById('editTaskContentDeadline').value=task.contentDeadline||'';document.getElementById('editTaskPassword').value=task.password||'';document.getElementById('editTaskMaxSubmit').value=task.maxSubmit||0;document.getElementById('editTaskMaxApprove').value=task.maxApprove||0;const tb=document.getElementById('editTaskTrackBuilder');tb.innerHTML='';(task.tracks||[]).forEach(tr=>{const row=document.createElement('div');row.className='track-row';row.innerHTML='<input type="text" placeholder="赛道名称" value="'+tr.name+'" style="flex:1"><input type="text" placeholder="赛道说明（选填）" value="'+(tr.desc||'')+'" style="flex:2"><button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.remove()">删除</button>';tb.appendChild(row);});openModal('modalEditTask');}
+function saveEditTask(){const taskId=document.getElementById('editTaskId').value;const title=document.getElementById('editTaskTitle').value.trim(),desc=document.getElementById('editTaskDesc').value.trim(),status=document.getElementById('editTaskStatus').value,briefDeadline=document.getElementById('editTaskBriefDeadline').value,contentDeadline=document.getElementById('editTaskContentDeadline').value,password=document.getElementById('editTaskPassword').value.trim();const maxSubmit=parseInt(document.getElementById('editTaskMaxSubmit').value)||0;const maxApprove=parseInt(document.getElementById('editTaskMaxApprove').value)||0;if(!title||!desc||!password){toast('标题、说明、口令不能为空','error');return;}const rows=document.getElementById('editTaskTrackBuilder').querySelectorAll('.track-row');const tracks=[];rows.forEach(row=>{const ins=row.querySelectorAll('input');const name=ins[0].value.trim();const desc2=ins[1].value.trim();if(name)tracks.push({name,desc:desc2});});if(!tracks.length){toast('至少添加一个赛道','error');return;}const db=getDB();const task=db.tasks.find(t=>t.id===taskId);if(!task)return;task.title=title;task.desc=desc;task.status=status;task.briefDeadline=briefDeadline;task.contentDeadline=contentDeadline;task.password=password;task.maxSubmit=maxSubmit;task.maxApprove=maxApprove;task.tracks=tracks;saveDB(db);closeModal('modalEditTask');renderOpTasks();renderOpStats();toast('任务已更新','success');}
+function renderOpBriefs(){const db=getDB();const container=document.getElementById('opBriefList');const pending=db.briefs.filter(b=>b.status==='pending');const reviewed=db.briefs.filter(b=>['op_approved','approved','rejected','vendor_rejected'].includes(b.status));if(!pending.length&&!reviewed.length){container.innerHTML='<div class="empty-state"><div class="icon">✅</div><p>暂无企划</p></div>';return;}const byPending={},byReviewed={};pending.forEach(b=>{(byPending[b.taskId]=byPending[b.taskId]||[]).push(b);});reviewed.forEach(b=>{(byReviewed[b.taskId]=byReviewed[b.taskId]||[]).push(b);});let html='';if(pending.length){html+='<div class="section-sep">待审核企划</div>';for(const taskId in byPending){const task=db.tasks.find(t=>t.id===taskId);html+='<div class="activity-group"><div class="activity-group-header"><span class="activity-group-title">'+(task?task.title:'未知活动')+'</span><span class="badge badge-pending">'+byPending[taskId].length+' 份待审核</span></div><div>'+byPending[taskId].map(b=>renderBriefCard(b,'operator')).join('')+'</div></div>';}}if(reviewed.length){html+='<div class="section-sep" style="margin-top:32px">已处理记录</div>';for(const taskId in byReviewed){const task=db.tasks.find(t=>t.id===taskId);const gid='or_'+taskId;html+='<div class="activity-group"><div class="activity-group-header tgl-hdr" data-gid="'+gid+'" style="cursor:pointer"><span class="activity-group-title">'+(task?task.title:'未知活动')+'</span><div style="display:flex;align-items:center;gap:8px"><span class="badge badge-approved">'+byReviewed[taskId].length+' 份</span><span class="tgl-arrow" style="font-size:12px;color:var(--gray-400)">▼ 展开</span></div></div><div id="'+gid+'" style="display:none">'+byReviewed[taskId].map(b=>renderBriefCard(b,'op_view')).join('')+'</div></div>';}}container.innerHTML=html;}
+function renderOpSubmissions(){const db=getDB();const container=document.getElementById('opSubmissionList');if(!db.contents.length){container.innerHTML='<div class="empty-state"><div class="icon">📦</div><p>暂无提交内容</p></div>';return;}const byTask={};db.contents.forEach(c=>{const brief=db.briefs.find(b=>b.id===c.briefId);if(brief)(byTask[brief.taskId]=byTask[brief.taskId]||[]).push(c);});let html='';for(const taskId in byTask){const task=db.tasks.find(t=>t.id===taskId);html+='<div class="activity-group"><div class="activity-group-header"><span class="activity-group-title">'+(task?task.title:'未知活动')+'</span><button class="btn btn-outline btn-sm" onclick="downloadCSV(\''+taskId+'\')">⬇ 导出 CSV</button></div><div>'+byTask[taskId].map(c=>{const brief=db.briefs.find(b=>b.id===c.briefId);return'<div class="brief-card"><div class="brief-card-header"><div class="brief-creator-info"><h4>'+(c.creatorName||'—')+'</h4><p>作者ID：'+(c.authorId||'—')+'</p></div><span class="badge badge-submitted">已提交</span></div><div class="brief-field"><div class="brief-field-label">笔记ID</div><div class="brief-field-value">'+(c.noteId||'—')+'</div></div><div class="brief-field"><div class="brief-field-label">发布时间</div><div class="brief-field-value">'+(c.publishTime?formatDatetime(c.publishTime):'—')+'</div></div><div class="brief-field"><div class="brief-field-label">发布链接</div><a href="'+c.contentLink+'" target="_blank" class="link-value">'+c.contentLink+'</a></div>'+(c.vendorRemarkOperator?'<div class="brief-field"><div class="brief-field-label">厂商给运营的备注</div><div class="brief-field-value" style="background:#eff6ff;border-radius:6px;padding:8px">'+c.vendorRemarkOperator+'</div></div>':'')+(c.screenshotData?'<div class="brief-field"><div class="brief-field-label">数据截图</div><img src="'+c.screenshotData+'" class="img-preview"></div>':'')+'<div class="text-muted mt-8">提交时间：'+formatDate(c.submittedAt)+'</div></div>';}).join('')+'</div></div>';}container.innerHTML=html;}
+function renderOpUsers(){const db=getDB();const container=document.getElementById('opUserList');if(!db.users.length){container.innerHTML='<div class="empty-state"><div class="icon">👤</div><p>暂无注册用户</p></div>';return;}container.innerHTML='<div style="padding:0 4px"><table><thead><tr><th>用户名</th><th>密码</th><th>作者ID</th><th>小红书号</th><th>主页链接</th><th>注册时间</th><th>操作</th></tr></thead><tbody>'+db.users.map(u=>'<tr><td class="fw-600">'+u.username+'</td><td><code style="background:var(--gray-100);padding:2px 6px;border-radius:4px;font-size:12px">'+u.password+'</code></td><td>'+u.authorId+'</td><td>'+u.xhsId+'</td><td><a href="'+u.profileLink+'" target="_blank" class="link-value">查看</a></td><td>'+formatDate(u.createdAt)+'</td><td><button class="btn btn-outline btn-sm" onclick="viewUserDetail(\''+u.id+'\')">详情</button></td></tr>').join('')+'</tbody></table></div>';}
+function opTab(tab,btn){document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');['tasks','briefs','submissions','users'].forEach(t=>{document.getElementById('opTab-'+t).style.display=t===tab?'block':'none';});if(tab==='briefs')renderOpBriefs();if(tab==='submissions')renderOpSubmissions();if(tab==='tasks')renderOpTasks();if(tab==='users')renderOpUsers();}
+function openCreateTask(){initTrackBuilder();openModal('modalCreateTask');}
+function createTask(){const title=val('taskTitle'),desc=val('taskDesc'),password=val('taskPassword'),status=val('taskStatus'),briefDeadline=val('taskBriefDeadline'),contentDeadline=val('taskContentDeadline');const maxSubmit=parseInt(document.getElementById('taskMaxSubmit').value)||0;const maxApprove=parseInt(document.getElementById('taskMaxApprove').value)||0;const tracks=getTracksFromBuilder();if(!title||!desc||!tracks.length||!password){toast('请填写所有必填字段','error');return;}const db=getDB();db.tasks.push({id:uid(),title,desc,tracks,status,briefDeadline,contentDeadline,password,maxSubmit,maxApprove,createdAt:Date.now()});saveDB(db);closeModal('modalCreateTask');clearFields(['taskTitle','taskDesc','taskPassword','taskBriefDeadline','taskContentDeadline']);document.getElementById('taskMaxSubmit').value='0';document.getElementById('taskMaxApprove').value='0';renderOpTasks();renderOpStats();toast('任务发布成功！','success');}
+function deleteTask(taskId){if(!confirm('确定删除此任务？相关企划和提交内容也会一并删除。'))return;const db=getDB();const relatedBriefIds=db.briefs.filter(b=>b.taskId===taskId).map(b=>b.id);db.tasks=db.tasks.filter(t=>t.id!==taskId);db.briefs=db.briefs.filter(b=>b.taskId!==taskId);db.contents=db.contents.filter(c=>!relatedBriefIds.includes(c.briefId));db.userTasks=(db.userTasks||[]).filter(ut=>ut.taskId!==taskId);saveDB(db);renderOpTasks();renderOpStats();toast('任务已删除');}
+function viewTaskDetail(taskId){const db=getDB();const task=db.tasks.find(t=>t.id===taskId);if(!task)return;alert('任务：'+task.title+'\n状态：'+(task.status||'进行中')+'\n赛道：'+(task.tracks||[]).map(t=>t.name).join('、')+'\n企划截止：'+(task.briefDeadline?formatDatetime(task.briefDeadline):'未设置')+'\n笔记截止：'+(task.contentDeadline?formatDatetime(task.contentDeadline):'未设置')+'\n口令：'+task.password+'\n企划数：'+db.briefs.filter(b=>b.taskId===taskId).length);}
+function viewUserDetail(userId){const db=getDB();const u=db.users.find(x=>x.id===userId);if(!u)return;document.getElementById('modalUserDetailBody').innerHTML='<div style="background:var(--gray-50);border-radius:8px;padding:16px;margin-bottom:16px"><div style="display:flex;gap:16px;margin-bottom:8px;font-size:13px"><div style="color:var(--gray-400);min-width:70px">用户名</div><div class="fw-600">'+u.username+'</div></div><div style="display:flex;gap:16px;margin-bottom:8px;font-size:13px"><div style="color:var(--gray-400);min-width:70px">密码</div><div><code style="background:var(--gray-100);padding:2px 6px;border-radius:4px;font-size:12px">'+u.password+'</code></div></div><div style="display:flex;gap:16px;margin-bottom:8px;font-size:13px"><div style="color:var(--gray-400);min-width:70px">作者ID</div><div>'+u.authorId+'</div></div><div style="display:flex;gap:16px;margin-bottom:8px;font-size:13px"><div style="color:var(--gray-400);min-width:70px">小红书号</div><div>'+u.xhsId+'</div></div><div style="display:flex;gap:16px;margin-bottom:8px;font-size:13px"><div style="color:var(--gray-400);min-width:70px">主页链接</div><div><a href="'+u.profileLink+'" target="_blank" class="link-value">'+u.profileLink+'</a></div></div><div style="display:flex;gap:16px;font-size:13px"><div style="color:var(--gray-400);min-width:70px">注册时间</div><div>'+formatDate(u.createdAt)+'</div></div></div>'+(u.profileScreenshot?'<div class="brief-field"><div class="brief-field-label">主页截图</div><img src="'+u.profileScreenshot+'" class="img-preview" style="max-height:300px"></div>':'');openModal('modalUserDetail');}
+function downloadCSV(taskId){const db=getDB();const rows=[['创作者昵称','作者ID','笔记ID','发布时间','发布链接','提交时间']];db.contents.forEach(c=>{const brief=db.briefs.find(b=>b.id===c.briefId);if(brief&&brief.taskId===taskId)rows.push([c.creatorName||'',c.authorId||'',c.noteId||'',c.publishTime?formatDatetime(c.publishTime):'',c.contentLink||'',c.submittedAt?new Date(c.submittedAt).toLocaleString('zh-CN'):'']);});const csv=rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='约稿数据_'+taskId.slice(0,8)+'_'+new Date().toLocaleDateString('zh-CN').replace(/\//g,'-')+'.csv';a.click();toast('CSV 已下载','success');}
+
+function renderVendor(){renderVendorStats();renderVendorBriefs();}
+function renderVendorStats(){const db=getDB();const s=document.getElementById('vendorStats');s.innerHTML='<div class="stat-card"><div class="stat-label">待审核</div><div class="stat-value yellow">'+db.briefs.filter(b=>b.status==='op_approved').length+'</div></div><div class="stat-card"><div class="stat-label">已通过</div><div class="stat-value green">'+db.briefs.filter(b=>b.status==='approved').length+'</div></div><div class="stat-card"><div class="stat-label">已拒绝</div><div class="stat-value" style="color:var(--red)">'+db.briefs.filter(b=>b.status==='vendor_rejected').length+'</div></div>';}
+function renderVendorBriefs(){const db=getDB();const container=document.getElementById('vendorBriefArea');const pending=db.briefs.filter(b=>b.status==='op_approved');const reviewed=db.briefs.filter(b=>['approved','vendor_rejected'].includes(b.status));if(!pending.length&&!reviewed.length){container.innerHTML='<div class="empty-state"><div class="icon">✅</div><p>暂无企划</p></div>';return;}const byPending={},byReviewed={};pending.forEach(b=>(byPending[b.taskId]=byPending[b.taskId]||[]).push(b));reviewed.forEach(b=>(byReviewed[b.taskId]=byReviewed[b.taskId]||[]).push(b));let html='';if(pending.length){html+='<div class="section-sep">待审核企划</div>';for(const tid in byPending){const task=db.tasks.find(t=>t.id===tid);html+='<div class="activity-group"><div class="activity-group-header"><span class="activity-group-title">'+(task?task.title:'未知活动')+'</span><span class="badge badge-op-approved">'+byPending[tid].length+' 份待审核</span></div><div>'+byPending[tid].map(b=>renderBriefCard(b,'vendor')).join('')+'</div></div>';}}if(reviewed.length){html+='<div class="section-sep" style="margin-top:32px">已审核记录</div>';for(const tid in byReviewed){const task=db.tasks.find(t=>t.id===tid);const gid='vr_'+tid;html+='<div class="activity-group"><div class="activity-group-header tgl-hdr" data-gid="'+gid+'" style="cursor:pointer"><span class="activity-group-title">'+(task?task.title:'未知活动')+'</span><div style="display:flex;align-items:center;gap:8px"><span class="badge badge-approved">'+byReviewed[tid].length+' 份</span><span class="tgl-arrow" style="font-size:12px;color:var(--gray-400)">▼ 展开</span></div></div><div id="'+gid+'" style="display:none">'+byReviewed[tid].map(b=>renderBriefCard(b,'vendor_view')).join('')+'</div></div>';}}container.innerHTML=html;}
+
+function renderBriefCard(b,context){var db=getDB();var task=db.tasks.find(function(t){return t.id===b.taskId;});var latest=b.history[b.history.length-1];var actions='';if(context==='operator')actions='<button class="btn btn-outline btn-sm" onclick="viewBriefDetail(\''+b.id+'\',\'operator\')">查看详情</button><button class="btn btn-success btn-sm" onclick="openOpApprove(\''+b.id+'\')">✓ 通过</button><button class="btn btn-danger btn-sm" onclick="openReject(\''+b.id+'\',\'operator\')">✗ 拒绝</button>';else if(context==='vendor')actions='<button class="btn btn-outline btn-sm" onclick="viewBriefDetail(\''+b.id+'\',\'vendor\')">查看详情</button><button class="btn btn-success btn-sm" onclick="openVendorApprove(\''+b.id+'\')">✓ 通过</button><button class="btn btn-danger btn-sm" onclick="openReject(\''+b.id+'\',\'vendor\')">✗ 拒绝</button>';var opRemark=b.opRemarkVendor&&context==='vendor'?'<div class="brief-field" style="margin-top:8px"><div class="brief-field-label">运营给厂商的备注</div><div class="brief-field-value" style="background:#eff6ff;border-radius:6px;padding:8px;font-size:13px">'+b.opRemarkVendor+'</div></div>':'';if(context==='vendor_view'||context==='op_view'){var detailCtx=context==='vendor_view'?'vendor_view':'op_view';var row='<div class="brief-card" style="padding:10px 16px"><div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><div style="flex:1;min-width:0;overflow:hidden"><span class="fw-600">'+b.creatorName+'</span>';if(b.authorId)row+='<span style="font-size:12px;color:var(--gray-400);margin-left:8px">'+b.authorId+'</span>';row+='<span style="font-size:12px;color:var(--gray-500);margin-left:8px">赛道：'+(latest?latest.track:'—')+'</span>';if(latest&&latest.idea)row+='<span style="font-size:12px;color:var(--gray-500);margin-left:8px">'+latest.idea.substring(0,40)+'</span>';row+='</div><div style="display:flex;align-items:center;gap:8px;flex-shrink:0"><span class="text-muted" style="font-size:12px">'+formatDate(b.updatedAt)+'</span><span class="badge '+badgeClass(b.status)+'">'+statusLabelFn(b.status)+'</span>';row+='<button class="btn btn-outline btn-sm" onclick="viewBriefDetail(\''+b.id+'\',\''+detailCtx+'\')">详情</button>';row+='</div></div></div>';return row;}return'<div class="brief-card"><div class="brief-card-header"><div class="brief-creator-info"><h4>'+b.creatorName+' <span style="font-size:12px;color:var(--gray-400)">ID: '+(b.authorId||'—')+'</span></h4><p>'+(task?task.title:'未知任务')+' · 赛道：'+(latest?latest.track:'—')+'</p></div><span class="badge '+badgeClass(b.status)+'">'+statusLabelFn(b.status)+'</span></div><div class="brief-field"><div class="brief-field-label">创意脑洞</div><div class="brief-field-value">'+((latest?latest.idea:'')||'').substring(0,120)+'</div></div><div class="brief-field"><div class="brief-field-label">代表作</div><a href="'+(latest?latest.work:'#')+'" target="_blank" class="link-value">'+(latest?latest.work:'—')+'</a></div>'+opRemark+'<div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px"><span class="text-muted">提交 '+b.history.length+' 次 · 最后更新 '+formatDate(b.updatedAt)+'</span></div>'+(actions?'<div class="brief-actions">'+actions+'</div>':'')+(b.rejectReason&&(b.status==='rejected'||b.status==='vendor_rejected')?'<div class="notice-box red" style="margin-top:10px;margin-bottom:0">拒绝原因：'+b.rejectReason+'</div>':'')+'</div>';}
+function viewBriefDetail(briefId,context){const db=getDB();const b=db.briefs.find(x=>x.id===briefId);if(!b)return;const latest=b.history[b.history.length-1];const task=db.tasks.find(t=>t.id===b.taskId);const opRVendor=(context==='vendor'&&b.opRemarkVendor)?'<div class="brief-field mb-16" style="background:#eff6ff;padding:12px;border-radius:8px"><div class="brief-field-label">运营给厂商的备注</div><div class="brief-field-value">'+b.opRemarkVendor+'</div></div>':'';document.getElementById('modalBriefDetailBody').innerHTML='<div class="brief-field mb-16"><div class="brief-field-label">创作者</div><div class="brief-field-value fw-600">'+b.creatorName+'</div></div><div class="brief-field mb-16"><div class="brief-field-label">作者ID</div><div class="brief-field-value">'+(b.authorId||'—')+'</div></div><div class="brief-field mb-16"><div class="brief-field-label">主页链接</div><a href="'+b.creatorProfile+'" target="_blank" class="link-value">'+b.creatorProfile+'</a></div><div class="brief-field mb-16"><div class="brief-field-label">所属任务</div><div class="brief-field-value">'+(task?task.title:'—')+'</div></div>'+opRVendor+'<hr class="divider"><div class="section-sep">最新企划（第 '+b.history.length+' 次提交）</div><div class="brief-field mb-16"><div class="brief-field-label">参与赛道</div><div class="brief-field-value">'+(latest?latest.track:'—')+'</div></div><div class="brief-field mb-16"><div class="brief-field-label">代表作</div><a href="'+(latest?latest.work:'#')+'" target="_blank" class="link-value">'+(latest?latest.work:'—')+'</a></div><div class="brief-field mb-16"><div class="brief-field-label">自荐说明</div><div class="brief-field-value" style="white-space:pre-wrap">'+(latest?latest.workDesc:'—')+'</div></div><div class="brief-field mb-16"><div class="brief-field-label">创意脑洞描述</div><div class="brief-field-value" style="white-space:pre-wrap">'+(latest?latest.idea:'—')+'</div></div>'+(latest&&latest.script?'<div class="brief-field mb-16"><div class="brief-field-label">创意脚本</div><div class="brief-field-value" style="white-space:pre-wrap">'+latest.script+'</div></div>':'')+'<hr class="divider"><div class="section-sep">提交历史（共 '+b.history.length+' 次）</div><div class="history-list">'+b.history.map((h,i)=>'<div class="history-item '+(i===b.history.length-1?'latest':'')+'"><div class="history-item-header"><span style="font-size:12px;font-weight:600;color:var(--gray-500)">第 '+(i+1)+' 次'+(i===b.history.length-1?' (最新)':'')+'</span><span class="text-muted">'+formatDate(h.submittedAt)+'</span></div><div class="brief-field-value" style="font-size:13px;margin-top:6px">'+(h.idea||'').substring(0,100)+'</div></div>').join('')+'</div>';let footer='<button class="btn btn-secondary" onclick="closeModal(\'modalBriefDetail\')">关闭</button>';if(context==='operator'&&b.status==='pending')footer+='<button class="btn btn-danger" onclick="closeModal(\'modalBriefDetail\');openReject(\''+briefId+'\',\'operator\')">✗ 拒绝</button><button class="btn btn-success" onclick="closeModal(\'modalBriefDetail\');openOpApprove(\''+briefId+'\')">✓ 通过</button>';else if(context==='vendor'&&b.status==='op_approved')footer+='<button class="btn btn-danger" onclick="closeModal(\'modalBriefDetail\');openReject(\''+briefId+'\',\'vendor\')">✗ 拒绝</button><button class="btn btn-success" onclick="closeModal(\'modalBriefDetail\');openVendorApprove(\''+briefId+'\')">✓ 通过</button>';document.getElementById('modalBriefDetailFooter').innerHTML=footer;openModal('modalBriefDetail');}
+
+function openOpApprove(briefId){pendingApproveBriefId=briefId;document.getElementById('opRemarkVendor').value='';document.getElementById('opRemarkCreator').value='';openModal('modalOpApprove');}
+function confirmOpApprove(){const remarkVendor=val('opRemarkVendor'),remarkCreator=val('opRemarkCreator');const db=getDB();const b=db.briefs.find(x=>x.id===pendingApproveBriefId);if(!b)return;b.status='op_approved';b.opRemarkVendor=remarkVendor;b.opRemarkCreator=remarkCreator;b.updatedAt=Date.now();b.notifications=b.notifications||[];if(remarkCreator)b.notifications.push({type:'op_remark',message:'📋 运营备注：'+remarkCreator,createdAt:Date.now()});saveDB(db);closeModal('modalOpApprove');toast('已通过运营审核','success');renderOpStats();renderOpBriefs();}
+function openVendorApprove(briefId){pendingApproveBriefId=briefId;document.getElementById('vendorRemarkOperator').value='';document.getElementById('vendorRemarkCreator').value='';openModal('modalVendorApprove');}
+function confirmVendorApprove(){const remarkOp=val('vendorRemarkOperator'),remarkCreator=val('vendorRemarkCreator');const db=getDB();const b=db.briefs.find(x=>x.id===pendingApproveBriefId);if(!b)return;b.status='approved';b.vendorRemarkCreator=remarkCreator;b.vendorRemarkOperator=remarkOp;b.updatedAt=Date.now();b.notifications=b.notifications||[];const allRemarks=[];if(b.opRemarkCreator)allRemarks.push(b.opRemarkCreator);if(remarkCreator)allRemarks.push(remarkCreator);b.notifications.push({type:'approved',message:'🎉 恭喜！你的创作企划已通过全部审核！请尽快完成内容创作并在截止日期前提交发布链接。'+(allRemarks.length?'\n\n📋 运营备注：\n'+allRemarks.join('\n'):''),createdAt:Date.now()});saveDB(db);closeModal('modalVendorApprove');toast('企划已最终通过！','success');renderVendorStats();renderVendorBriefs();}
+function openReject(briefId,role){pendingRejectBriefId=briefId;pendingRejectRole=role;document.getElementById('rejectReason').value='';openModal('modalRejectReason');}
+function confirmReject(){const reason=val('rejectReason');if(!reason){toast('请填写拒绝原因','error');return;}const db=getDB();const b=db.briefs.find(x=>x.id===pendingRejectBriefId);if(!b)return;b.status=pendingRejectRole==='operator'?'rejected':'vendor_rejected';b.rejectReason=reason;b.updatedAt=Date.now();b.notifications=b.notifications||[];b.notifications.push({type:'rejected',message:'❌ 你的企划未通过审核。原因：'+reason,createdAt:Date.now()});saveDB(db);closeModal('modalRejectReason');toast('已拒绝','info');if(currentRole==='operator'){renderOpStats();renderOpBriefs();}if(currentRole==='vendor'){renderVendorStats();renderVendorBriefs();}}
+
+function renderCreatorDash(){if(!currentCreatorUser)return;document.getElementById('creatorDashSubtitle').textContent='欢迎，'+currentCreatorUser.username;renderCreatorAvailable();renderCreatorJoined();}
+function renderCreatorAvailable(){const db=getDB();const joinedIds=db.userTasks.filter(ut=>ut.userId===currentCreatorUser.id).map(ut=>ut.taskId);const available=db.tasks.filter(t=>t.status==='active'&&!joinedIds.includes(t.id));const c=document.getElementById('creatorTab-available');c.innerHTML=available.length?available.map(t=>'<div class="task-list-item"><div class="task-list-header" style="display:flex;align-items:flex-start;justify-content:space-between"><div class="task-list-title">'+t.title+'</div><span class="badge badge-active">进行中</span></div><div class="task-list-desc">'+t.desc+'</div><div class="task-list-meta">'+(t.tracks||[]).map(tr=>'🎯 '+tr.name).join(' · ')+(t.briefDeadline?' · 📝 截止：'+formatDatetime(t.briefDeadline):'')+'</div><div style="margin-top:12px"><button class="btn btn-primary btn-sm" onclick="openJoinTask(\''+t.id+'\')">🔐 参加活动</button></div></div>').join(''):'<div class="empty-state"><div class="icon">🔥</div><p>暂无可参加的活动</p></div>';}
+function renderCreatorJoined(){const db=getDB();const joined=db.userTasks.filter(ut=>ut.userId===currentCreatorUser.id);const c=document.getElementById('creatorTab-joined');if(!joined.length){c.innerHTML='<div class="empty-state"><div class="icon">📌</div><p>还没有参加任何活动</p></div>';return;}c.innerHTML=joined.map(ut=>{const task=db.tasks.find(t=>t.id===ut.taskId);if(!task)return'';const brief=db.briefs.find(b=>b.taskId===task.id&&b.userId===currentCreatorUser.id);const status=brief?brief.status:null;return'<div class="task-list-item"><div class="task-list-header" style="display:flex;align-items:flex-start;justify-content:space-between"><div class="task-list-title">'+task.title+'</div>'+(status?'<span class="badge '+badgeClass(status)+'">'+statusLabelFn(status)+'</span>':'<span class="badge badge-draft">未提交</span>')+'</div><div class="task-list-desc">'+task.desc+'</div><div class="task-list-meta">参加时间：'+formatDate(ut.joinedAt)+'</div><div style="margin-top:12px"><button class="btn btn-outline btn-sm" onclick="enterCreatorTask(\''+task.id+'\')">查看详情 / 提交企划</button></div></div>';}).join('');}
+function creatorTab(tab,btn){document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');document.getElementById('creatorTab-available').style.display=tab==='available'?'block':'none';document.getElementById('creatorTab-joined').style.display=tab==='joined'?'block':'none';}
+function openJoinTask(taskId){pendingJoinTaskId=taskId;document.getElementById('joinTaskPassword').value='';openModal('modalJoinTask');}
+function confirmJoinTask(){const pwd=val('joinTaskPassword');if(!pwd){toast('请输入活动口令','error');return;}const db=getDB();const task=db.tasks.find(t=>t.id===pendingJoinTaskId);if(!task){toast('活动不存在','error');return;}if(task.password!==pwd){toast('口令不正确','error');return;}db.userTasks.push({userId:currentCreatorUser.id,taskId:pendingJoinTaskId,joinedAt:Date.now()});saveDB(db);closeModal('modalJoinTask');renderCreatorDash();toast('参加活动成功！','success');}
+function backToCreatorDash(){showScreen('creator-dash');renderCreatorDash();}
+
+function enterCreatorTask(taskId){currentCreatorTaskId=taskId;const db=getDB();const task=db.tasks.find(t=>t.id===taskId);if(!task)return;showScreen('creator-task');document.getElementById('creatorTaskTitle').textContent=task.title;renderCreatorTaskView();}
+function renderCreatorTaskView(){var db=getDB();var task=db.tasks.find(function(t){return t.id===currentCreatorTaskId;});if(!task)return;var now=Date.now();var briefExpired=task.briefDeadline&&new Date(task.briefDeadline).getTime()<now;var contentExpired=task.contentDeadline&&new Date(task.contentDeadline).getTime()<now;var maxSubmit=task.maxSubmit||0;var maxApprove=task.maxApprove||0;var myBriefs=db.briefs.filter(function(b){return b.taskId===task.id&&b.userId===currentCreatorUser.id;});var submitCount=myBriefs.length;var approvedCount=myBriefs.filter(function(b){return b.status==='approved';}).length;var hasActive=myBriefs.some(function(b){return b.status==='pending'||b.status==='op_approved';});var banner='<h2>'+task.title+'</h2><p>'+task.desc+'</p><div class="task-meta">'+(task.tracks||[]).map(function(t){return'<div class="task-meta-item"><span>🎯</span> '+t.name+(t.desc?'：'+t.desc:'')+'</div>';}).join('')+(task.briefDeadline?'<div class="task-meta-item"><span>📝</span> 企划截止：'+formatDatetime(task.briefDeadline)+'</div>':'')+(task.contentDeadline?'<div class="task-meta-item"><span>📦</span> 笔记截止：'+formatDatetime(task.contentDeadline)+'</div>':'')+(maxSubmit?'<div class="task-meta-item"><span>📊</span> 最多提交：'+maxSubmit+' 次</div>':'')+(maxApprove?'<div class="task-meta-item"><span>✅</span> 最多通过：'+maxApprove+' 次</div>':'')+'</div>';document.getElementById('creatorTaskBanner').innerHTML=banner;document.getElementById('creatorSteps').innerHTML='';document.getElementById('creatorNotifArea').innerHTML='';var html='';if(briefExpired){html+='<div class="notice-box red">⏰ 企划提交时间已截止。</div>';}else if(maxApprove>0&&approvedCount>=maxApprove){html+='<div class="notice-box green">🎉 你已达到本活动最多通过次数（'+maxApprove+' 次），无需再提交。</div>';}else if(maxSubmit>0&&submitCount>=maxSubmit){html+='<div class="notice-box red">⚠️ 你已达到本活动最多提交次数（'+maxSubmit+' 次）。</div>';}else if(hasActive){html+='<div class="notice-box">⏳ 你有企划正在审核中，审核完成后才能提交下一份。</div>';}else{html+='<div style="text-align:center;margin-bottom:20px"><button class="btn btn-primary btn-lg" onclick="openSubmitBrief()">📝 提交新企划</button>'+(submitCount>0?'<div class="text-muted mt-8">已提交 '+submitCount+' 次'+(maxSubmit?' / 上限 '+maxSubmit+' 次':'')+'</div>':'')+'</div>';}if(myBriefs.length){html+='<div class="section-sep">我的企划列表（共 '+myBriefs.length+' 份）</div>';var reversed=[].concat(myBriefs).reverse();reversed.forEach(function(b,idx){var latest=b.history[b.history.length-1];var contentDone=db.contents.find(function(x){return x.briefId===b.id;});var briefNo=myBriefs.length-idx;var remarkParts=[];if(b.opRemarkCreator)remarkParts.push(b.opRemarkCreator);if(b.vendorRemarkCreator)remarkParts.push(b.vendorRemarkCreator);var combinedRemark=remarkParts.join('\n');var card='<div class="brief-card" style="margin-bottom:16px">';card+='<div class="brief-card-header"><div class="brief-creator-info"><h4>企划 #'+briefNo+'</h4><p>赛道：'+(latest?latest.track:'—')+' · 提交于 '+formatDate(b.createdAt)+'</p></div><span class="badge '+badgeClass(b.status)+'">'+statusLabelFn(b.status)+'</span></div>';card+='<div class="brief-field"><div class="brief-field-label">创意脑洞</div><div class="brief-field-value">'+((latest?latest.idea:'')||'').substring(0,120)+'</div></div>';if(combinedRemark&&b.status!=='rejected'&&b.status!=='vendor_rejected'){card+='<div class="brief-field"><div class="brief-field-label">运营备注</div><div class="brief-field-value" style="background:#eff6ff;border-radius:6px;padding:8px;white-space:pre-wrap;font-size:13px">'+combinedRemark+'</div></div>';}if(b.rejectReason&&(b.status==='rejected'||b.status==='vendor_rejected')){card+='<div class="notice-box red" style="margin-top:8px;margin-bottom:0">拒绝原因：'+b.rejectReason+'</div>';}if(b.status==='approved'){if(contentDone){card+='<div style="background:#d1fae5;border-radius:8px;padding:12px 16px;margin-top:10px;font-size:13px">📦 内容已提交 · <a href="'+contentDone.contentLink+'" target="_blank" class="link-value">查看链接</a> · 提交于 '+formatDate(contentDone.submittedAt)+'</div>';}else if(contentExpired){card+='<div class="notice-box red" style="margin-top:8px;margin-bottom:0">⏰ 笔记提交时间已截止。</div>';}else{card+='<div style="margin-top:10px"><button class="btn btn-success btn-sm" onclick="openSubmitContent(\''+b.id+'\')">📦 提交发布内容</button></div>';}}card+='</div>';html+=card;});}document.getElementById('creatorBriefArea').innerHTML=html;}
+function openSubmitBrief(){const db=getDB();const task=db.tasks.find(t=>t.id===currentCreatorTaskId);if(!task)return;const sel=document.getElementById('briefTrack');sel.innerHTML='<option value="">请选择...</option>';(task.tracks||[]).forEach(tr=>{const o=document.createElement('option');o.value=tr.name;o.textContent=tr.name+(tr.desc?'（'+tr.desc+'）':'');sel.appendChild(o);});setVal('briefName',currentCreatorUser.username||'');setVal('briefAuthorId',currentCreatorUser.authorId||'');setVal('briefProfile',currentCreatorUser.profileLink||'');openModal('modalSubmitBrief');}
+function preSubmitBrief(){const name=val('briefName'),authorId=val('briefAuthorId'),profile=val('briefProfile'),work=val('briefWork'),workDesc=val('briefWorkDesc'),track=val('briefTrack'),idea=val('briefIdea');if(!name||!authorId||!profile||!work||!workDesc||!track||!idea){toast('请填写所有必填字段','error');return;}_pendingBriefData={name,authorId,profile,work,workDesc,track,idea,script:val('briefScript')};closeModal('modalSubmitBrief');openModal('modalConfirmBrief');}
+function doSubmitBrief(){if(!_pendingBriefData)return;const{name,authorId,profile,work,workDesc,track,idea,script}=_pendingBriefData;_pendingBriefData=null;const db=getDB();const histEntry={track,work,workDesc,idea,script,submittedAt:Date.now()};const brief={id:uid(),taskId:currentCreatorTaskId,userId:currentCreatorUser.id,creatorName:name,authorId,creatorProfile:profile,status:'pending',history:[histEntry],notifications:[],rejectReason:null,opRemarkCreator:'',opRemarkVendor:'',vendorRemarkCreator:'',vendorRemarkOperator:'',createdAt:Date.now(),updatedAt:Date.now()};db.briefs.push(brief);saveDB(db);closeModal('modalConfirmBrief');renderCreatorTaskView();toast('企划提交成功！等待运营审核','success');}
+function openSubmitContent(briefId){['contentName','contentAuthorId','contentNoteId','contentLink','contentNote'].forEach(id=>setVal(id,''));setVal('contentPublishTime','');document.getElementById('contentScreenshot').value='';document.getElementById('screenshotPreview').style.display='none';document.getElementById('modalSubmitContent').dataset.briefId=briefId;const db=getDB();const b=db.briefs.find(x=>x.id===briefId);if(b){setVal('contentName',b.creatorName);setVal('contentAuthorId',b.authorId||'');}openModal('modalSubmitContent');}
+function submitContent(){const briefId=document.getElementById('modalSubmitContent').dataset.briefId,link=val('contentLink'),name=val('contentName'),authorId=val('contentAuthorId'),noteId=val('contentNoteId'),publishTime=val('contentPublishTime');if(!link||!name||!authorId||!noteId||!publishTime){toast('请填写所有必填字段','error');return;}const sp=document.getElementById('screenshotPreview');const screenshotData=sp&&sp.src&&!sp.src.endsWith(location.href)?sp.src:null;const db=getDB();const b=db.briefs.find(x=>x.id===briefId);const record={briefId,creatorName:name,authorId,noteId,publishTime,contentLink:link,screenshotData,note:val('contentNote'),vendorRemarkOperator:b?b.vendorRemarkOperator||'':'',submittedAt:Date.now()};const ei=db.contents.findIndex(c=>c.briefId===briefId);if(ei>=0)db.contents[ei]=record;else db.contents.push(record);saveDB(db);closeModal('modalSubmitContent');renderCreatorTaskView();toast('内容提交成功！感谢参与','success');}
+function previewScreenshot(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{const img=document.getElementById('screenshotPreview');img.src=ev.target.result;img.style.display='block';};r.readAsDataURL(f);}
+
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+function val(id){const el=document.getElementById(id);return el?(el.value||'').trim():'';}
+function setVal(id,v){const el=document.getElementById(id);if(el)el.value=v||'';}
+function clearFields(ids){ids.forEach(id=>setVal(id,''));}
+function uid(){return Math.random().toString(36).slice(2)+Date.now().toString(36);}
+function formatDate(ts){if(!ts)return'—';const d=new Date(ts);return(d.getMonth()+1)+'/'+(d.getDate())+' '+d.getHours()+':'+String(d.getMinutes()).padStart(2,'0');}
+function formatDatetime(s){if(!s)return'—';try{const d=new Date(s);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');}catch(e){return s;}}
+function toggleGroup(id){var el=document.getElementById(id);if(!el)return;var hidden=el.style.display==='none';el.style.display=hidden?'block':'none';}document.addEventListener('click',function(e){var hdr=e.target.closest('.tgl-hdr');if(!hdr)return;var gid=hdr.getAttribute('data-gid');if(!gid)return;var el=document.getElementById(gid);if(!el)return;var hidden=el.style.display==='none';el.style.display=hidden?'block':'none';var arrow=hdr.querySelector('.tgl-arrow');if(arrow)arrow.textContent=hidden?'▲ 收起':'▼ 展开';});function statusLabelFn(status){const m={pending:'待运营审核',op_approved:'待厂商审核',approved:'✅ 已通过',rejected:'❌ 运营拒绝',vendor_rejected:'❌ 厂商拒绝'};return m[status]||status;}
+function badgeClass(status){const m={pending:'badge badge-pending',op_approved:'badge badge-op-approved',approved:'badge badge-approved',rejected:'badge badge-rejected',vendor_rejected:'badge badge-rejected'};return m[status]||'badge';}
+function toast(msg,type){const c=document.getElementById('toastContainer');const t=document.createElement('div');t.className='toast '+(type||'');const icons={success:'✅',error:'❌',info:'ℹ️'};t.innerHTML='<span>'+(icons[type]||'💬')+'</span> '+msg;c.appendChild(t);setTimeout(()=>t.remove(),3000);}
+document.querySelectorAll('.modal-overlay').forEach(o=>{o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');});});
+</script>
+
+</body>
+</html>
