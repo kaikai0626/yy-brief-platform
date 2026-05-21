@@ -523,5 +523,21 @@ function toast(msg,type){const c=document.getElementById('toastContainer');const
 document.querySelectorAll('.modal-overlay').forEach(o=>{o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');});});
 </script>
 
+<script>
+(function(){
+  var role = new URLSearchParams(location.search).get('role');
+  if(role === 'vendor') {
+    window.addEventListener('DOMContentLoaded', function(){
+      currentRole = 'vendor';
+      showScreen('auth');
+      document.getElementById('authTitle').textContent = '厂商审核台';
+    });
+  } else if(role === 'creator') {
+    window.addEventListener('DOMContentLoaded', function(){
+      showCreatorLogin();
+    });
+  }
+})();
+</script>
 </body>
 </html>
