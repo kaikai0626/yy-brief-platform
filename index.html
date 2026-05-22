@@ -146,36 +146,34 @@ input[type="file"]{padding:8px;background:var(--gray-50);border:1.5px dashed var
 </style>
 <script>
   (function(){
-    var SB_URL = 'https://rllscejekghnpfgfbbms.supabase.co';
-    var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJsbHNjZWpla2dobnBmZ2ZiYm1zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNjgzOTgsImV4cCI6MjA5NDk0NDM5OH0.DhKY6ninj5L3RD-7AmSzJs7Qn4X0XCgwop5oy-GDwZQ';
+    var API = 'https://yy-brief-api.hekaiwen1.workers.dev';
     var DB_ROW_KEY = 'collab_platform_v3_hkw2026';
     var LOCAL_KEY = 'collab_platform_v3';
     var DEF = {tasks:[],briefs:[],contents:[],users:[],userTasks:[]};
 
-    function sbHeaders(){ return {'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates'}; }
-
     window._sbSave = function(data){
-      return fetch(SB_URL+'/rest/v1/kv_store', {method:'POST', headers:sbHeaders(), body:JSON.stringify({key:DB_ROW_KEY,value:data})})
+      return fetch(API+'/api/db', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({key:DB_ROW_KEY, value:JSON.stringify(data)})})
         .then(function(r){ if(!r.ok) throw new Error(r.status); });
     };
 
     window._sbLoad = function(){
-      return fetch(SB_URL+'/rest/v1/kv_store?key=eq.'+DB_ROW_KEY, {headers:sbHeaders()})
+      return fetch(API+'/api/db?key='+DB_ROW_KEY)
         .then(function(r){ return r.json(); })
-        .then(function(rows){ return (rows&&rows.length)?rows[0].value:null; });
+        .then(function(res){
+          if(!res.value) return null;
+          return typeof res.value === 'string' ? JSON.parse(res.value) : res.value;
+        });
     };
 
     function syncDown(){
       window._sbLoad().then(function(d){
         if(!d) return;
         localStorage.setItem(LOCAL_KEY, JSON.stringify(Object.assign({},DEF,d)));
-        console.log('Supabase 同步完成');
-      }).catch(function(e){ console.warn('Supabase 同步失败', e); });
+        console.log('CF同步完成');
+      }).catch(function(e){ console.warn('CF同步失败', e); });
     }
 
-    // 页面加载立即拉一次
     syncDown();
-    // 每10秒轮询
     setInterval(syncDown, 10000);
   })();
 </script>
